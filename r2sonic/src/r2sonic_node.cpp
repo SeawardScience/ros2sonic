@@ -19,8 +19,8 @@ void R2SonicNode::Parameters::init(rclcpp::Node *node){
   setupParam(&topics.bth0,node,"topics/bth0","~/raw/bth0");
   setupParam(&topics.aid0,node,"topics/aid0","~/raw/aid0");
   setupParam(&topics.acoustic_image,node,"topics/acoustic_image","~/acoustic_image");
-  setupParam(&ports.bathy,node,"ports/bathy",65500);
-  setupParam(&ports.acoustic_image,node,"ports/acoustic_image" ,65503);
+  setupParam(&ports.bathy,node,"ports/bathy",4000);
+  setupParam(&ports.acoustic_image,node,"ports/acoustic_image" ,4003);
   setupParam(&sonar_ip,node,"sonar_ip","10.0.0.86");
   setupParam(&interface_ip,node,"interface_ip","0.0.0.0");
   setupParam(&tx_frame_id,node,"tx_frame_id","r2sonic_tx");
