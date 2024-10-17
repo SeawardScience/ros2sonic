@@ -9,7 +9,7 @@
       ixblue_ins:
         topics:
           orientation: sensors/mru/imu/data
-          position: sensors/mru/imu/nav_sat_fix
+          position: sensors/mru/imu/ekf/fix
           velocity: sensors/mru/imu/velocity
     sensors_names:
     - ixblue_ins

@@ -23,8 +23,12 @@
   <node pkg="mru_transform" exec="mru_transform_node" name="mru_transform" output="screen" namespace="$(var vessel_ns)/nav">
     <param from="$(find-pkg-share r2sonic)/config/mru_transform.yaml"/>
     <param from="$(find-pkg-share $(var vessel_config))/config/mru_transform.yaml"/>
-    <param name="base_frame" value="$(var vessel_ns)/acoustic_center"/>
+    <param name="base_frame" value="$(var vessel_ns)/base_link"/>
   </node>
+
+  <include file="$(find-pkg-share r2sonic)/launch/publish_urdf.launch.py">
+    <arg name="vessel_ns"     value="$(var vessel_ns)"/>
+  </include>
 
 
 

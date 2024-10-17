@@ -32,7 +32,7 @@ namespace conversions{
     detections_msg->rx_angles.resize(num_beams);
 
 
-    u32 angle_sum = 0;
+    f32 angle_sum = 0;
     if(bth0_pkt.a2().exists()){
       angle_sum = bth0_pkt.a2().body()->AngleFirst;
     }
@@ -51,9 +51,14 @@ namespace conversions{
         auto delta = (last - first)/num_beams;
         detections_msg->rx_angles[i] = first + delta * i;
       }
+      // [radians] angle[n] = A2_AngleFirst + (32-bit sum of A2_AngleStep[0] through A2_AngleStep[n]) * A2_ScalingFactor
       if(bth0_pkt.a2().exists()){
-        detections_msg->rx_angles[i] = angle_sum*bth0_pkt.a2().body()->ScalingFactor.get();
-        angle_sum += bth0_pkt.a2().AngleStep(i)->get();
+        auto angle_first = bth0_pkt.a2().body()->AngleFirst.get();
+        auto step = bth0_pkt.a2().AngleStep(i)->get();
+        auto scale_factor = bth0_pkt.a2().body()->ScalingFactor.get();
+        detections_msg->rx_angles[i] = angle_first + angle_sum * scale_factor;
+
+        angle_sum += step;
       }
 
     }

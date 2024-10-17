@@ -1,73 +1,20 @@
 <?xml version="1.0" ?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro" name="odysseus4k">
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="r2sonic">
 
-  <xacro:arg name="namespace" default="odysseus4k" />
+  <xacro:arg name="namespace" default="r2sonic" />
 
   <xacro:property name="namespace" value="$(arg namespace)" scope="global" />
 
-  <xacro:property name="thruster_prefix" value="thrusters/" scope="global" />
-
   <xacro:property name="deg" value="${pi/180}" />
 
-  <link name="${namespace}/base_link">
-    <visual>
-      <origin rpy="0.0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://odysseus4k/meshes/odysseus4k_prelim_compressed.dae"/>
-      </geometry>
-    </visual>
-  </link>
+  <link name="${namespace}/base_link"></link>
+  <link name="${namespace}/acoustic_center"></link>
 
-  <link name="${namespace}/control"></link>
 
-  <link name="${namespace}/chasis_center"></link>
-
-  <link name="${namespace}/pt_mount"></link>
-
-  <joint name="base2chasis_center" type="fixed">
+  <joint name="base2acoustic" type="fixed">
     <parent link="${namespace}/base_link"/>
-    <child link="${namespace}/chasis_center"/>
-    <origin xyz="0.5987 0 0.6470" rpy="0 0 0" />
+    <child link="${namespace}/acoustic_center"/>
+    <origin xyz="0 0 0" rpy="${0*deg} ${0*deg} ${0*deg}" />
   </joint>
-
-  <joint name="base2pt_mount" type="fixed">
-    <parent link="${namespace}/base_link"/>
-    <child link="${namespace}/pt_mount"/>
-    <origin xyz="1.3516 0 0.7676" rpy="0 0 0" />
-  </joint>
-
-  <joint name="chassis2control" type="fixed">
-    <parent link="${namespace}/chasis_center"/>
-    <child link="${namespace}/control"/>
-    <origin xyz="0 0 0" rpy="0 0 0" />
-  </joint>
-
-<!-- Thrusters -->
-
-  <xacro:macro name="thruster" params="name xyz rpy" >
-
-    <link name="${namespace}/${thruster_prefix}${name}"></link>
-
-    <joint name="base2${name}" type="fixed">
-      <parent link="${namespace}/chasis_center"/>
-      <child  link="${namespace}/${thruster_prefix}${name}"/>
-      <origin xyz="${xyz}" rpy="${rpy}" />
-    </joint>
-
-  </xacro:macro>
-
-  <xacro:property name="tow_in" value="40" scope="global" />
-  <xacro:property name="vert_tow_in" value="20" scope="global" />
-
-  <xacro:thruster name="aft_port"   xyz="-0.984   0.492 0.0" rpy="0 0 ${tow_in*deg}" />
-  <xacro:thruster name="aft_stbd"   xyz="-0.984  -0.492 0.0" rpy="0 0 ${- tow_in*deg}" />
-  <xacro:thruster name="fwd_port"   xyz=" 0.612   0.519  0.0" rpy="0 0 ${- tow_in*deg}" />
-  <xacro:thruster name="fwd_stbd"   xyz=" 0.612  -0.519  0.0" rpy="0 0 ${+ tow_in*deg}" />
-
-
-  <xacro:thruster name="vert_port"  xyz="0.3     0.545 0.463" rpy="0 ${270*deg - vert_tow_in*deg +180*deg} ${90*deg}" />
-  <xacro:thruster name="vert_stbd"  xyz="0.3    -0.545 0.463" rpy="0 ${270*deg + vert_tow_in*deg +180*deg} ${90*deg}" />
-  <xacro:thruster name="vert_aft"   xyz="-1.01   0.0   0.317" rpy="${90*deg} ${270*deg + 180*deg} 0" />
-
 
 </robot>
