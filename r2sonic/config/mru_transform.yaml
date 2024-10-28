@@ -6,11 +6,11 @@
     odom_topic: odom
     sensor_timeout: 2.0
     sensors:
-      ixblue_ins:
+      sbg_mru:
         topics:
           orientation: sensors/mru/imu/data
           position: sensors/mru/imu/ekf/fix
           velocity: sensors/mru/imu/velocity
     sensors_names:
-    - ixblue_ins
+    - sbg_mru
     use_sim_time: false
