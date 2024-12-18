@@ -18,6 +18,7 @@
   <node pkg="sbg_driver" exec="sbg_device" name="sbg_mru" namespace="$(var vessel_ns)/nav/sensors/mru">
     <param from="$(find-pkg-share r2sonic)/config/sbg_mru.yaml"/>
     <param from="$(find-pkg-share $(var vessel_config))/config/sbg_mru.yaml"/>
+    <param name="frame_id.frame_id" value="$(var vessel_ns)/base_link"/>
   </node>
 
   <node pkg="mru_transform" exec="mru_transform_node" name="mru_transform" output="screen" namespace="$(var vessel_ns)/nav">
