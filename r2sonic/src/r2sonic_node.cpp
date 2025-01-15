@@ -15,23 +15,42 @@ void setupParam(std::string * variable,rclcpp::Node *node , std::string topic, s
 }
 
 void R2SonicNode::Parameters::init(rclcpp::Node *node){
-  setupParam(&topics.detections,node,"topics/detections","~/detections");
-  setupParam(&topics.bth0,node,"topics/bth0","~/raw/bth0");
-  setupParam(&topics.aid0,node,"topics/aid0","~/raw/aid0");
-  setupParam(&topics.acoustic_image,node,"topics/acoustic_image","~/acoustic_image");
-  setupParam(&ports.bathy,node,"ports/bathy",4000);
+  setupParam(&topics.detections,node,"topics.detections","~/detections");
+  setupParam(&topics.bth0,node,"topics.bth0","~/raw/bth0");
+  setupParam(&topics.aid0,node,"topics.aid0","~/raw/aid0");
+  setupParam(&topics.acoustic_image,node,"topics.acoustic_image","~/acoustic_image");
+  setupParam(&ports.bathy,node,"ports.bathy",4000);
   setupParam(&ports.acoustic_image,node,"ports/acoustic_image" ,4003);
   setupParam(&sonar_ip,node,"sonar_ip","10.0.0.86");
+  setupParam(&sim_ip,node,"sim_ip","10.0.0.99");
   setupParam(&interface_ip,node,"interface_ip","0.0.0.0");
   setupParam(&tx_frame_id,node,"tx_frame_id","r2sonic_tx");
   setupParam(&rx_frame_id,node,"rx_frame_id","r2sonic_rx");
 
+  // SimCmds
+  for (auto &[key, value_pair] : sim_commands.int_params) {
+    setupParam(&value_pair.second, node, "sim_commands." + key, value_pair.second);
+  }
+
+  // HeadCmds (Float)
+  for (auto &[key, value_pair] : head_commands.float_params) {
+    setupParam(&value_pair.second, node, "head_commands." + key, value_pair.second);
+  }
+
+  // HeadCmds (Int)
+  for (auto &[key, value_pair] : head_commands.int_params) {
+    setupParam(&value_pair.second, node, "head_commands." + key, value_pair.second);
+  }
+
+
   RCLCPP_INFO(node->get_logger(), "Listening on interface  : %s", interface_ip.c_str());
   RCLCPP_INFO(node->get_logger(), "Sending sonar comands on: %s", sonar_ip.c_str());
+
+
 }
 
-template <typename T>
-bool send_udp_message(packets::CmdPacket<T> message, const std::string& destination_ip,
+
+bool send_udp_message(packets::CmdSet message, const std::string& destination_ip,
             const unsigned short port) {
 
   using namespace boost::asio;
@@ -40,8 +59,9 @@ bool send_udp_message(packets::CmdPacket<T> message, const std::string& destinat
   auto remote = ip::udp::endpoint(ip::address::from_string(destination_ip), port);
   try {
     socket.open(boost::asio::ip::udp::v4());
-    socket.send_to(buffer(reinterpret_cast<char*>(&message),
-                          sizeof(packets::CmdPacket<T>)),
+    auto buff = message.serialize();
+    socket.send_to(buffer(buff,
+                          buff.size()),
                           remote);
 
   } catch (const boost::system::system_error& ex) {
@@ -74,6 +94,18 @@ R2SonicNode::R2SonicNode():
     msg_buffer_.acoustic_image.pub =
         this->create_publisher<marine_acoustic_msgs::msg::RawSonarImage>(parameters_.topics.acoustic_image,100);
   }
+
+  // Register the timer to call send_sim_cmds every second
+  timer_ = this->create_wall_timer(
+      std::chrono::seconds(1),
+      std::bind(&R2SonicNode::send_cmds, this)
+      );
+
+
+  // Register parameter update callback
+  param_callback_handle_ = this->add_on_set_parameters_callback(
+      std::bind(&R2SonicNode::onParameterUpdate, this, std::placeholders::_1)
+      );
 
 }
 
@@ -137,6 +169,111 @@ void R2SonicNode::publish(packets::AID0 &aid0_packet){
   msg_buffer_.aid0.unlock();
   msg_buffer_.acoustic_image.unlock();
 }
+
+rcl_interfaces::msg::SetParametersResult R2SonicNode::onParameterUpdate(const std::vector<rclcpp::Parameter> &params) {
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  result.reason = "Success";
+
+  for (const auto &param : params) {
+    try {
+      const std::string &param_name = param.get_name();
+
+      // Check if the parameter belongs to SimCmds
+      if (param_name.find("sim_commands.") == 0) {
+        std::string key = param_name.substr(std::string("sim_commands.").length());
+        auto it = parameters_.sim_commands.int_params.find(key);
+        if (it != parameters_.sim_commands.int_params.end()) {
+          it->second.second = param.as_int();
+        } else {
+          result.successful = false;
+          result.reason = "Unknown parameter in sim_commands: " + key;
+        }
+      }
+      // Check if the parameter belongs to HeadCmds (Float)
+      else if (param_name.find("head_commands.") == 0) {
+        std::string key = param_name.substr(std::string("head_commands.").length());
+
+        // Check in float_params
+        auto float_it = parameters_.head_commands.float_params.find(key);
+        if (float_it != parameters_.head_commands.float_params.end()) {
+          float_it->second.second = param.as_double();
+        }
+        // Check in int_params
+        else {
+          auto int_it = parameters_.head_commands.int_params.find(key);
+          if (int_it != parameters_.head_commands.int_params.end()) {
+            int_it->second.second = param.as_int();
+          } else {
+            result.successful = false;
+            result.reason = "Unknown parameter in head_commands: " + key;
+          }
+        }
+      }
+      // Unknown parameter
+      else {
+        result.successful = false;
+        result.reason = "Unknown parameter: " + param_name;
+      }
+    } catch (const std::exception &e) {
+      result.successful = false;
+      result.reason = std::string("Failed to update parameter: ") + e.what();
+    }
+  }
+
+  return result;
+}
+
+void R2SonicNode::send_cmds()
+{
+  send_sim_cmds();
+  send_head_cmds();
+}
+
+void R2SonicNode::send_sim_cmds() {
+  packets::CmdSet cmd_pkt;
+
+  // Add all SimCmds to the packet
+  for (const auto &[key, value_pair] : parameters_.sim_commands.int_params) {
+    const auto &cmd_name = value_pair.first; // Command name (e.g., "GPSB")
+    const auto &value = value_pair.second;   // Command value
+    cmd_pkt.append(packets::IntCmd(cmd_name.c_str(), value));
+  }
+
+  // Send the serialized packet (e.g., via UDP)
+  send_udp_message(cmd_pkt, parameters_.sim_ip, 65502);
+
+  // Optional: Log the operation
+  RCLCPP_DEBUG(this->get_logger(), "Sent SimCmds to sonar at %s", parameters_.sim_ip.c_str());
+}
+
+void R2SonicNode::send_head_cmds() {
+  packets::CmdSet cmd_pkt;
+
+  // Serialize float commands
+  for (const auto &[key, value_pair] : parameters_.head_commands.float_params) {
+    const auto &cmd_name = value_pair.first; // Command name (e.g., "ABS0")
+    const auto &value = value_pair.second;   // Command value
+    cmd_pkt.append(packets::FloatCmd(cmd_name.c_str(), value));
+  }
+
+  // Serialize integer commands
+  for (const auto &[key, value_pair] : parameters_.head_commands.int_params) {
+    const auto &cmd_name = value_pair.first; // Command name (e.g., "BIE0")
+    const auto &value = value_pair.second;   // Command value
+    cmd_pkt.append(packets::IntCmd(cmd_name.c_str(), value));
+  }
+
+  // Serialize the packet
+  auto buff = cmd_pkt.serialize();
+
+  // Send the serialized packet (e.g., via UDP)
+  send_udp_message(cmd_pkt, parameters_.sonar_ip, 65502);
+
+  // Optional: Log the operation
+  RCLCPP_INFO(this->get_logger(), "Sent HeadCmds to sonar at %s", parameters_.sonar_ip.c_str());
+}
+
 
 template <typename T>
 void R2SonicNode::cleanMsgMap(msgMap<T> *msg_map, u32 ping_no){

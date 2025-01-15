@@ -5,8 +5,8 @@
           bth0:           "~/raw/bth0"        # The topic to publish raw bathy data
 
       ports:
-          bathy:          4000 #65500         # The port you are receiving bathy data on
-
+          bathy:          65400   #4000       # The port you are receiving bathy data on
+          acoustic_image: 65403
       sonar_ip:           "10.0.0.86"         # The IP address of the sonar.  This is where you will send sonar commands.
                                               # does not need to be specified if you are listen only
 

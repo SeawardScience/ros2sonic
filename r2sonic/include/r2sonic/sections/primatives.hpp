@@ -67,6 +67,10 @@ struct BigEndianPrimative{
 
   operator float() const {return get(); }
   operator double() const {return get(); }
+
+  //BigEndianPrimative<PrimT>& operator=(const PrimT& other){set(other);}
+  template <typename IN_T>
+  BigEndianPrimative<PrimT>& operator=(const IN_T& other){set(other);}
 };
 
 typedef BigEndianPrimative<u8>      BE_u8;

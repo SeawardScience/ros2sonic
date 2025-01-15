@@ -2,3 +2,5 @@
 
 #include "bth0.hpp"
 #include "aid0.hpp"
+#include "cmd_packet.hpp"
+
