@@ -32,10 +32,7 @@ namespace conversions{
     detections_msg->rx_angles.resize(num_beams);
 
 
-    f32 angle_sum = 0;
-    if(bth0_pkt.a2().exists()){
-      angle_sum = bth0_pkt.a2().body()->AngleFirst;
-    }
+    u32 angle_sum = 0;
     for(size_t i = 0; i<num_beams ; i++){
       detections_msg->two_way_travel_times[i] = bth0_pkt.r0().getScaledRange(i);
       detections_msg->tx_delays[i]= 0;
@@ -54,9 +51,9 @@ namespace conversions{
       // [radians] angle[n] = A2_AngleFirst + (32-bit sum of A2_AngleStep[0] through A2_AngleStep[n]) * A2_ScalingFactor
       if(bth0_pkt.a2().exists()){
         auto angle_first = bth0_pkt.a2().body()->AngleFirst.get();
-        auto step = bth0_pkt.a2().AngleStep(i)->get();
+        u32 step = bth0_pkt.a2().AngleStep(i)->get();
         auto scale_factor = bth0_pkt.a2().body()->ScalingFactor.get();
-        detections_msg->rx_angles[i] = angle_first + angle_sum * scale_factor;
+        detections_msg->rx_angles[i] = angle_first + (angle_sum * scale_factor);
 
         angle_sum += step;
       }

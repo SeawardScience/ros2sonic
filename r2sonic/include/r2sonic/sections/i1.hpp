@@ -12,7 +12,7 @@ class I1 : public Section
 public:
   using Section::Section;  // default to parent constructor
   char * nominalType() const{
-    return "I2";
+    return "I1";
   }
   BE_f32 * ScalingFactor() const{
     existanceErrorCheck();
