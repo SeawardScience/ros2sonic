@@ -53,9 +53,8 @@ namespace conversions{
         auto angle_first = bth0_pkt.a2().body()->AngleFirst.get();
         u32 step = bth0_pkt.a2().AngleStep(i)->get();
         auto scale_factor = bth0_pkt.a2().body()->ScalingFactor.get();
-        detections_msg->rx_angles[i] = angle_first + (angle_sum * scale_factor);
-
         angle_sum += step;
+        detections_msg->rx_angles[i] = angle_first + (angle_sum * scale_factor);
       }
 
     }
