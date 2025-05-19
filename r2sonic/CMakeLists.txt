@@ -10,6 +10,8 @@ set(ROS_DEPENDS
     std_msgs
     marine_acoustic_msgs
     r2sonic_interfaces
+    io_interfaces
+    rtcm_msgs
   )
 
 set(EXTERNAL_DEPENDS
