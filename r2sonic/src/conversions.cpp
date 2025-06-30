@@ -75,10 +75,9 @@ namespace conversions{
       // Rx angle: Prefer A2 if available
       if (has_a2) {
 
+        a2_step_sum += bth0_pkt.a2().AngleStep(i)->get();
+
         detections_msg->rx_angles[i] = a2_angle_first + (a2_step_sum * a2_scale_factor);
-        if (i > 0) {
-          a2_step_sum += bth0_pkt.a2().AngleStep(i)->get();
-        }
       }
       else if (has_a0) {
         detections_msg->rx_angles[i] = a0_angle_first + (a0_delta * i);
