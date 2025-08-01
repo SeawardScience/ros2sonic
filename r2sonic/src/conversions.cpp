@@ -19,52 +19,74 @@ namespace conversions{
     }
   }
   void bth02SonarDetections(marine_acoustic_msgs::msg::SonarDetections * detections_msg,
-                            const packets::BTH0 & bth0_pkt){
+                            const packets::BTH0 & bth0_pkt)
+  {
     auto num_beams = bth0_pkt.h0().body()->Beams.get();
 
+    // Fill common metadata
     h02PingInfo(&detections_msg->ping_info, bth0_pkt.h0());
     h02Header(&detections_msg->header, bth0_pkt.h0());
 
+    // Resize detection vectors
     detections_msg->two_way_travel_times.resize(num_beams);
     detections_msg->tx_delays.resize(num_beams);
     detections_msg->intensities.resize(num_beams);
     detections_msg->tx_angles.resize(num_beams);
     detections_msg->rx_angles.resize(num_beams);
 
-
-    f32 angle_sum = 0;
-    if(bth0_pkt.a2().exists()){
-      angle_sum = bth0_pkt.a2().body()->AngleFirst;
+    // A2 data (if it exists)
+    bool has_a2 = bth0_pkt.a2().exists();
+    float a2_angle_first = 0.0f;
+    float a2_scale_factor = 0.0f;
+    if (has_a2) {
+      a2_angle_first = bth0_pkt.a2().body()->AngleFirst.get();
+      a2_scale_factor = bth0_pkt.a2().body()->ScalingFactor.get();
     }
-    for(size_t i = 0; i<num_beams ; i++){
+
+    // A0 data (fallback)
+    bool has_a0 = bth0_pkt.a0().exists();
+    float a0_angle_first = 0.0f;
+    float a0_delta = 0.0f;
+    if (has_a0 && num_beams > 1) {
+      auto a0_angle_last = bth0_pkt.a0().body()->AngleLast.get();
+      a0_angle_first = bth0_pkt.a0().body()->AngleFirst.get();
+      a0_delta = (a0_angle_last - a0_angle_first) / (num_beams - 1);
+    }
+
+    // Begin decoding beams
+    uint32_t a2_step_sum = 0;
+    for (size_t i = 0; i < num_beams; ++i) {
+      // Range
       detections_msg->two_way_travel_times[i] = bth0_pkt.r0().getScaledRange(i);
-      detections_msg->tx_delays[i]= 0;
-      if(bth0_pkt.i1().exists()){
-        detections_msg->intensities[i]= bth0_pkt.i1().getScaledIntensity(i);
-      }else{
-        detections_msg->intensities[i]= 0;
+
+      // Tx delay placeholder (not yet supported)
+      detections_msg->tx_delays[i] = 0;
+
+      // Intensity if available
+      if (bth0_pkt.i1().exists()) {
+        detections_msg->intensities[i] = bth0_pkt.i1().getScaledIntensity(i);
+      } else {
+        detections_msg->intensities[i] = 0;
       }
+
+      // Tx angle is constant across beams
       detections_msg->tx_angles[i] = bth0_pkt.h0().body()->TxSteeringVert;
-      if(bth0_pkt.a0().exists()){
-        auto first = bth0_pkt.a0().body()->AngleFirst.get();
-        auto last  = bth0_pkt.a0().body()->AngleLast.get();
-        auto delta = (last - first)/num_beams;
-        detections_msg->rx_angles[i] = first + delta * i;
-      }
-      // [radians] angle[n] = A2_AngleFirst + (32-bit sum of A2_AngleStep[0] through A2_AngleStep[n]) * A2_ScalingFactor
-      if(bth0_pkt.a2().exists()){
-        auto angle_first = bth0_pkt.a2().body()->AngleFirst.get();
-        auto step = bth0_pkt.a2().AngleStep(i)->get();
-        auto scale_factor = bth0_pkt.a2().body()->ScalingFactor.get();
-        detections_msg->rx_angles[i] = angle_first + angle_sum * scale_factor;
 
-        angle_sum += step;
-      }
+      // Rx angle: Prefer A2 if available
+      if (has_a2) {
 
+        a2_step_sum += bth0_pkt.a2().AngleStep(i)->get();
+
+        detections_msg->rx_angles[i] = a2_angle_first + (a2_step_sum * a2_scale_factor);
+      }
+      else if (has_a0) {
+        detections_msg->rx_angles[i] = a0_angle_first + (a0_delta * i);
+      } else {
+        detections_msg->rx_angles[i] = 0.0f;  // fallback default
+      }
     }
-    return;
-
   }
+
 
   void packet2RawPacket(r2sonic_interfaces::msg::RawPacket *raw_packet_msg, const packets::Packet * pkt){
     raw_packet_msg->data.resize(pkt->getSize());

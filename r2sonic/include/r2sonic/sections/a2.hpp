@@ -38,7 +38,7 @@ public:
    */
   BE_u16 * AngleStep(u16 beam_no) const{
     existanceErrorCheck();
-    return & reinterpret_cast<BE_u16*>(start_bit_+sizeof(SectionInfo)+sizeof(f32))[beam_no];
+    return & reinterpret_cast<BE_u16*>(start_bit_+sizeof(SectionInfo)+sizeof(Body))[beam_no];
   }
 
 }__attribute__((packed));
