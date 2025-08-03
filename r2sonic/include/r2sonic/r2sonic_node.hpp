@@ -59,96 +59,98 @@ public:
     std::string rx_frame_id;        //!< the frame ID of the acoustic center of the receiver
 
     struct SimCmds {
-      std::map<std::string, std::pair<std::string, int>> int_params; //!< Map of integer parameters with command names and values
+      std::map<std::string, std::pair<std::string, int>> int_params;
 
       SimCmds() {
         int_params = {
-          int_params = {
-              // Initialization and status
-              {"status_data", {"STM0", 1}},         // Status data mode (on)
+            {"status_data", {"STM0", 3}},
 
-              {"iins", {"IINS", 1}},
+            {"gps_enable", {"ENG0", 1}},
+            {"gps_interface", {"DRG0", 0}},
+            {"gps_baud", {"BDG0", 9600}},
+            {"gps_data_bits", {"DBG0", 8}},
+            {"gps_parity", {"PAG0", 0}},
+            {"gps_stop_bits", {"SBG0", 1}},
+            {"pps_edge", {"POG0", 1}},
 
-              // GPS commands
-              {"gps_enable", {"ENG0", 1}},          // GPS enable
-              {"gps_interface", {"DRG0", 0}},       // GPS interface (RS-232)
-              {"gps_baud", {"BDG0", 9600}},         // GPS baud rate
-              {"gps_data_bits", {"DBG0", 8}},       // GPS data bits
-              {"gps_parity", {"PAG0", 0}},          // GPS parity (none)
-              {"gps_stop_bits", {"SBG0", 1}},       // GPS stop bits
-              {"pps_edge", {"POG0", 0}},            // PPS edge (rising)
+            {"trigger_in_mode", {"SYI0", 0}},
+            {"trigger_out_mode", {"SYO0", 0}},
 
-              // Trigger commands
-              {"trigger_in_mode", {"SYI0", 0}},     // Trigger in mode (rising edge)
-              {"trigger_out_mode", {"SYO0", 0}},    // Trigger out mode (off)
+            {"heading_enable", {"ENH0", 0}},
+            {"heading_interface", {"DRH0", 2}},
 
-              // Heading commands
-              {"heading_enable", {"ENH0", 0}},      // Heading enable
-              {"heading_interface", {"DRH0", 2}},   // Heading interface (RS-232)
+            {"motion_enable", {"ENM0", 1}},
+            {"motion_interface", {"DRM0", 0}},
+            {"motion_baud", {"BDM0", 19200}},
+            {"motion_data_bits", {"DBM0", 8}},
+            {"motion_parity", {"PAM0", 0}},
+            {"motion_stop_bits", {"SBM0", 1}},
 
-              // Motion commands
-              {"motion_enable", {"ENM0", 1}},       // Motion enable
-              {"motion_interface", {"DRM0", 0}},    // Motion interface (RS-232)
-              {"motion_baud", {"BDM0", 115200}},    // Motion baud rate
-              {"motion_data_bits", {"DBM0", 8}},    // Motion data bits
-              {"motion_parity", {"PAM0", 0}},       // Motion parity (none)
-              {"motion_stop_bits", {"SBM0", 1}},    // Motion stop bits
+            {"svp_enable", {"ENS0", 1}},
+            {"svp_interface", {"DRS0", 0}},
+            {"svp_baud", {"BDS0", 9600}},
+            {"svp_data_bits", {"DBS0", 8}},
+            {"svp_parity", {"PAS0", 0}},
+            {"svp_stop_bits", {"SBS0", 1}},
 
-              // SVP commands
-              {"svp_enable", {"ENS0", 1}},          // SVP enable
-              {"svp_interface", {"DRS0", 0}},       // SVP interface (RS-232)
-              {"svp_baud", {"BDS0", 19200}},        // SVP baud rate
-              {"svp_data_bits", {"DBS0", 8}},       // SVP data bits
-              {"svp_parity", {"PAS0", 0}},          // SVP parity (none)
-              {"svp_stop_bits", {"SBS0", 1}},       // SVP stop bits
-
-              // Sonar commands
-              {"sonar_power", {"SPO0", 1}}         // Sonar head power (on)
-            }
+            {"sonar_power", {"SPO0", 1}},
+            {"ins_enable", {"IINS", 1}}
         };
       }
-    }sim_commands;
+    } sim_commands;
+
 
     struct HeadCmds {
-      std::map<std::string, std::pair<std::string, float>> float_params; //!< Map of float parameters with command names and values
-      std::map<std::string, std::pair<std::string, int>> int_params; //!< Map of integer parameters with command names and values
+      std::map<std::string, std::pair<std::string, float>> float_params;
+      std::map<std::string, std::pair<std::string, int>> int_params;
 
       HeadCmds() {
         float_params = {
                         {"absorption", {"ABS0", 80.0f}},
                         {"acoustic_brightness", {"AIB0", 30.0f}},
-                        {"max_range", {"BMAX", 999.0f}},
-                        {"min_range", {"BMIN", 0.0f}},
                         {"sound_velocity", {"SVL0", 1496.0f}},
                         {"range", {"RNG0", 25.0f}},
-                        {"receiver_tilt", {"RET0", 0.0f}},
+                        {"receiver_gain", {"GAN0", 14.0f}},
+                        {"frequency", {"FRQ0", 200000.0f}},
+                        {"transmitter_power", {"TXP0", 191.0f}},
+                        {"transmitter_pulse_length", {"TXL0", 0.00038f}},
+                        {"sector_width", {"SEW0", 2.094395f}},
                         {"depth_gate_min", {"DGA0", 6.8f}},
                         {"depth_gate_max", {"DGB0", 10.4f}},
                         {"depth_gate_slope", {"DGS0", 0.0f}},
-                        {"frequency", {"FRQ0", 400000.0f}},
-                        {"receiver_gain", {"GAN0", 14.0f}},
+                        {"receiver_tilt", {"RET0", 0.0f}},
                         {"projector_focus", {"TXF0", 0.0f}},
-                        {"transmitter_power", {"TXP0", 191.0f}},
-                        {"transmitter_pulse_length", {"TXL0", 275e-6f}},
                         {"vertical_steering_angle", {"TXS0", 0.0f}},
-                        {"sector_width", {"SEW0", 2.79f}},
                         {"sector_rotate", {"SER0", 0.0f}},
+                        {"projector_roll", {"PRL0", 1.0f}},
+                        {"projector_pitch", {"PRU0", 0.0f}},
+                        {"projector_z", {"PRZ0", 0.119f}},
                         };
 
         int_params = {
-                      {"bathy_intensity_enable", {"BIE0", 1}},
-                      {"sound_velocity_enable", {"SVU0", 0}},
-                      {"roll_stabilization_enable", {"ROS0", 0}},
-                      {"depth_gate_mode", {"DGO0", 0}},
-                      {"head_sync_mode", {"DHM0", 0}},
-                      {"projector_orientation", {"PRO0", 0}},
-                      {"water_column_enable", {"WCM0", 0}},
-                      {"pitch_stabilization_enable", {"PTS0", 0}},
+                      {"sound_velocity_enable", {"SVU0", 1}},
+                      {"depth_gate_mode", {"DGO0", 1}},
                       {"auto_mode_flags", {"AUT0", 0}},
+                      {"bathy_intensity_enable", {"BIE0", 1}},
+                      {"roll_stabilization_enable", {"ROS0", 1}},
+                      {"pitch_stabilization_enable", {"PTS0", 1}},
+                      {"head_sync_mode", {"DHM0", 0}},
+                      {"projector_orientation", {"PRO0", 1}},
+                      {"water_column_enable", {"WCM0", 0}},
                       {"ping_mode", {"TRG0", 0}},
+                      {"slope_filter_enable", {"FIL0", 0}},
+                      {"bottom_strength", {"BOS0", 0}},
+                      {"spr_setting", {"SPR0", 20}},          // derived from 0x41a00000
+                      {"aih_setting", {"AIH0", 280}},         // from 0x00000118
+                      {"time_ping_mode", {"TPM0", 1}},
+                      {"time_ping_gap", {"TPG0", 0}},
+                      {"snippets_enable", {"SNIP", 0}},
+                      {"txwaveform_index", {"TWIX", 0}},
+                      {"projector_mode", {"PROJ", 1}},
                       };
       }
-    }head_commands;
+    } head_commands;
+
 
     /*!
      * \brief declares all the parameters and initialized all the stored variables

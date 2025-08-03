@@ -20,7 +20,7 @@ void R2SonicNode::Parameters::init(rclcpp::Node *node){
   setupParam(&topics.aid0,node,"topics.aid0","~/raw/aid0");
   setupParam(&topics.acoustic_image,node,"topics.acoustic_image","~/acoustic_image");
   setupParam(&ports.bathy,node,"ports.bathy",4000);
-  setupParam(&ports.acoustic_image,node,"ports/acoustic_image" ,4003);
+  setupParam(&ports.acoustic_image,node,"ports.acoustic_image" ,4003);
   setupParam(&sonar_ip,node,"sonar_ip","10.0.0.86");
   setupParam(&sim_ip,node,"sim_ip","10.0.0.99");
   setupParam(&interface_ip,node,"interface_ip","0.0.0.0");
@@ -244,7 +244,7 @@ void R2SonicNode::send_sim_cmds() {
   send_udp_message(cmd_pkt, parameters_.sim_ip, 65502);
 
   // Optional: Log the operation
-  RCLCPP_DEBUG(this->get_logger(), "Sent SimCmds to sonar at %s", parameters_.sim_ip.c_str());
+  RCLCPP_INFO(this->get_logger(), "Sent SimCmds to sonar at %s", parameters_.sim_ip.c_str());
 }
 
 void R2SonicNode::send_head_cmds() {
