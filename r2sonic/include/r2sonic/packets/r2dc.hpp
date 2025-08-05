@@ -71,12 +71,8 @@ struct R2DC {
    * \brief Constructor that initializes the R2DC packet with default network configuration and a serial number.
    * \param serial_num Serial number string (null-padded to 12 characters if shorter)
    */
-  explicit R2DC(const char* serial_num) {
+  explicit R2DC() {
     std::memcpy(name, "R2DC", 4);
-    std::memset(serial_number, 0, sizeof(serial_number));
-    if (serial_num != nullptr) {
-      std::strncpy(serial_number, serial_num, sizeof(serial_number));
-    }
 
     config_id = 2549138156;  // Temporary default (will be overridden by setConfigID)
 
@@ -87,22 +83,22 @@ struct R2DC {
     system = 0;
 
     head_ip[0] = ip_str_to_u32("10.0.0.86");
-    head_ip[1] = ip_str_to_u32("10.0.1.86");
+    head_ip[1] = ip_str_to_u32("0.0.0.0");
     head_ip[2] = ip_str_to_u32("0.0.0.0");
     head_ip[3] = ip_str_to_u32("0.0.0.0");
 
     head_baseport[0] = 65500;
-    head_baseport[1] = 65500;
+    head_baseport[1] = 0;
     head_baseport[2] = 0;
     head_baseport[3] = 0;
 
     simbox_ip[0] = ip_str_to_u32("10.0.0.99");
-    simbox_ip[1] = ip_str_to_u32("10.0.1.99");
+    simbox_ip[1] = ip_str_to_u32("0.0.0.0");
     simbox_ip[2] = ip_str_to_u32("0.0.0.0");
     simbox_ip[3] = ip_str_to_u32("0.0.0.0");
 
     simbox_baseport[0] = 65500;
-    simbox_baseport[1] = 65500;
+    simbox_baseport[1] = 0;
     simbox_baseport[2] = 0;
     simbox_baseport[3] = 0;
 
@@ -140,8 +136,8 @@ struct R2DC {
    * \brief Sets the internal config_id field using the current configuration and node name.
    * \param node_name The ROS 2 node name to tie the config ID to this software instance
    */
-  void setConfigId(std::string_view node_name) {
-    config_id = generateConfigID(node_name);
+  void setConfigId() {
+    config_id = generateConfigID("ros2sonic");
   }
 
   /*!

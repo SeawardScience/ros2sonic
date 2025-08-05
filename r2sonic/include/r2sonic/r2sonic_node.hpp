@@ -43,21 +43,56 @@ public:
    * mapps to param "topics/detections"
    */
   struct Parameters{
-    struct Topics{
-      std::string detections;       //!< detections topic with type marine_acoustic_msgs::RawSonarDetections
-      std::string bth0;             //!< raw bth0 topic r2sonic_interfaces::RawPacket
-      std::string acoustic_image;   //!< acoustic image topic with type marine_acoustic_msgs::RawSonarImage
-      std::string aid0;             //!< raw aid0 topic with type r2sonic_interfaces::RawPacket
-    } topics; //!< a container for the topics.
-    struct Ports{
-      int bathy;                    //!< the port to listen to bathy
-      int acoustic_image;           //!< the port to listen for acoustic image data
-    } ports;  //!< a container for the ports
-    std::string sonar_ip;           //!< the ip address to send commands to the sonar
-    std::string sim_ip;
-    std::string interface_ip;       //!< the interface you want to listen on (0.0.0.0 to listen on all)
-    std::string tx_frame_id;        //!< the frame ID of the acoustic center of the transmitter
-    std::string rx_frame_id;        //!< the frame ID of the acoustic center of the receiver
+
+    struct{
+      std::string subnet_mask = "255.0.0.0";
+      std::string gateway_ip = "0.0.0.0";
+      std::string gui_ip = "10.0.1.102";
+      int gui_baseport = 65400;
+      std::array<std::string, SYSTEMS> head_ips = {"10.0.0.86"};
+      std::array<int, SYSTEMS> head_baseports = {65500};
+
+      std::array<std::string, SYSTEMS> simbox_ips = {"10.0.0.99"};
+      std::array<int, SYSTEMS> simbox_baseports = {65500};
+
+      std::array<std::string, DAQS> daq_ips = {"10.0.1.102","10.0.1.102","10.0.1.102"};
+      std::array<int, DAQS> daq_baseports = {4100,4200,4300};
+    } network;
+
+    struct{
+      bool control_mode = false;
+    } driver;
+    struct{
+      int system_index = 0;
+      std::string head_serial =  "";
+      std::string sim_serial  =  "";
+      std::string interface_ip = "0.0.0.0";       //!< the interface you want to listen on (0.0.0.0 to listen on all)
+      std::string tx_frame_id =  "acoustic_center";        //!< the frame ID of the acoustic center of the transmitter
+      std::string rx_frame_id =  "acoustic_center";        //!< the frame ID of the acoustic center of the receiver
+    }sonar;
+
+    struct{
+      std::string detections = "~/detections";       //!< detections topic with type marine_acoustic_msgs::RawSonarDetections
+      std::string bth0 = "~/raw/bth0";             //!< raw bth0 topic r2sonic_interfaces::RawPacket
+      std::string acoustic_image = "~/acoustic_image";   //!< acoustic image topic with type marine_acoustic_msgs::RawSonarImage
+      std::string aid0 = "~/raw/aid0";             //!< raw aid0 topic with type r2sonic_interfaces::RawPacket
+    } topics;
+
+    std::string getHeadIp() const {
+      return network.head_ips[sonar.system_index];
+    }
+
+    int getHeadBaseport() const {
+      return network.head_baseports[sonar.system_index];
+    }
+
+    std::string getSimIp() const {
+      return network.simbox_ips[sonar.system_index];
+    }
+
+    int getSimBaseport() const {
+      return network.simbox_baseports[sonar.system_index];
+    }
 
     struct SimCmds {
       std::map<std::string, std::pair<std::string, int>> int_params;

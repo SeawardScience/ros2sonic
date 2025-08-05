@@ -11,17 +11,17 @@ int main(int argc, char *argv[])
 
   r2sonic::DatatypeReceiver<r2sonic::packets::BTH0> bth0_rec(node.get());
   threads.push_back(
-    std::thread([&] { bth0_rec.receive(node->getParams().interface_ip,node->getParams().ports.bathy); })
+    std::thread([&] { bth0_rec.receive(node->getParams().sonar.interface_ip,node->getParams().network.gui_baseport + 0); })
   );
 
   r2sonic::DatatypeReceiver<r2sonic::packets::AID0> aid0_rec(node.get());
   threads.push_back(
-    std::thread([&] { aid0_rec.receive(node->getParams().interface_ip,node->getParams().ports.acoustic_image); })
+    std::thread([&] { aid0_rec.receive(node->getParams().sonar.interface_ip,node->getParams().network.gui_baseport + 3); })
   );
 
   r2sonic::UdpReceiver cmd_rec;
   threads.push_back(
-      std::thread([&] { cmd_rec.receive(node->getParams().interface_ip,65402); })
+      std::thread([&] { cmd_rec.receive(node->getParams().sonar.interface_ip,node->getParams().network.gui_baseport + 2); })
       );
 
   rclcpp::spin(node);
