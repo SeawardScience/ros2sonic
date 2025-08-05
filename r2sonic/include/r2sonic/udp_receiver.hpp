@@ -15,7 +15,7 @@ class UdpReceiver
 public:
   UdpReceiver();
   void receiveHandler(const boost::system::error_code& error, size_t bytes_transferred);
-  virtual void receiveImpl(const boost::system::error_code& error, size_t bytes_transferred)=0;
+  virtual void receiveImpl(const boost::system::error_code& error, size_t bytes_transferred){return;}
   void wait();
   void receive(const std::string& host,
                const std::string& port);

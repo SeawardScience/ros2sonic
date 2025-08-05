@@ -19,6 +19,11 @@ int main(int argc, char *argv[])
     std::thread([&] { aid0_rec.receive(node->getParams().interface_ip,node->getParams().ports.acoustic_image); })
   );
 
+  r2sonic::UdpReceiver cmd_rec;
+  threads.push_back(
+      std::thread([&] { cmd_rec.receive(node->getParams().interface_ip,65402); })
+      );
+
   rclcpp::spin(node);
   rclcpp::shutdown();
 

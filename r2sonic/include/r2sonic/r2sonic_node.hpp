@@ -8,6 +8,7 @@
 #include <r2sonic_interfaces/msg/raw_packet.hpp>
 #include <boost/asio.hpp>
 #include <r2sonic/packets/cmd_packet.hpp>
+#include <packets/r2dc.hpp>
 
 NS_HEAD
 
@@ -81,14 +82,14 @@ public:
 
             {"motion_enable", {"ENM0", 1}},
             {"motion_interface", {"DRM0", 0}},
-            {"motion_baud", {"BDM0", 19200}},
+            {"motion_baud", {"BDM0", 115200}},
             {"motion_data_bits", {"DBM0", 8}},
             {"motion_parity", {"PAM0", 0}},
             {"motion_stop_bits", {"SBM0", 1}},
 
             {"svp_enable", {"ENS0", 1}},
             {"svp_interface", {"DRS0", 0}},
-            {"svp_baud", {"BDS0", 9600}},
+            {"svp_baud", {"BDS0", 19200}},
             {"svp_data_bits", {"DBS0", 8}},
             {"svp_parity", {"PAS0", 0}},
             {"svp_stop_bits", {"SBS0", 1}},
@@ -115,16 +116,15 @@ public:
                         {"transmitter_power", {"TXP0", 191.0f}},
                         {"transmitter_pulse_length", {"TXL0", 0.00038f}},
                         {"sector_width", {"SEW0", 2.094395f}},
-                        {"depth_gate_min", {"DGA0", 6.8f}},
-                        {"depth_gate_max", {"DGB0", 10.4f}},
-                        {"depth_gate_slope", {"DGS0", 0.0f}},
+                        {"depth_gate.min", {"DGA0", 6.8f}},
+                        {"depth_gate.max", {"DGB0", 10.4f}},
+                        {"depth_gate.slope", {"DGS0", 0.0f}},
                         {"receiver_tilt", {"RET0", 0.0f}},
                         {"projector_focus", {"TXF0", 0.0f}},
                         {"vertical_steering_angle", {"TXS0", 0.0f}},
                         {"sector_rotate", {"SER0", 0.0f}},
-                        {"projector_roll", {"PRL0", 1.0f}},
-                        {"projector_pitch", {"PRU0", 0.0f}},
-                        {"projector_z", {"PRZ0", 0.119f}},
+                        {"ping_rate_limit.value", {"PRL0", 60.0f}},
+                        {"projector_z", {"PRZ0", 0.119f}}
                         };
 
         int_params = {
@@ -137,16 +137,17 @@ public:
                       {"head_sync_mode", {"DHM0", 0}},
                       {"projector_orientation", {"PRO0", 1}},
                       {"water_column_enable", {"WCM0", 0}},
-                      {"ping_mode", {"TRG0", 0}},
+                      {"ping_trigger_source", {"TRG0", 0}},
                       {"slope_filter_enable", {"FIL0", 0}},
-                      {"bottom_strength", {"BOS0", 0}},
-                      {"spr_setting", {"SPR0", 20}},          // derived from 0x41a00000
+                      {"bottom_sampling", {"BOS0", 0}},
+                      {"spreading_loss", {"SPR0", 20}},          // derived from 0x41a00000
                       {"aih_setting", {"AIH0", 280}},         // from 0x00000118
-                      {"time_ping_mode", {"TPM0", 1}},
-                      {"time_ping_gap", {"TPG0", 0}},
+                      {"true_pix_mode", {"TPM0", 1}},
+                      {"true_pix_gates", {"TPG0", 0}},
                       {"snippets_enable", {"SNIP", 0}},
                       {"txwaveform_index", {"TWIX", 0}},
                       {"projector_mode", {"PROJ", 1}},
+                      {"ping_rate_limit.enable", {"PRU0", 0}}
                       };
       }
     } head_commands;
@@ -182,6 +183,7 @@ protected:
   rclcpp::TimerBase::SharedPtr timer_; //!< Timer to periodically send SimCmds
 
   void send_cmds();
+  void sendNetworkConfig();
   void send_sim_cmds();
   void send_head_cmds();
 
@@ -238,6 +240,45 @@ protected:
    * \return true if you should publish on that publisher (e.g. has subscribers)
    */
   bool shouldPublish(rclcpp::PublisherBase::SharedPtr pub);
+
+  /*!
+ * \brief Sends any serializable packet type over UDP.
+ * \tparam PacketType A type that provides `serialize()` returning `std::vector<uint8_t>`
+ * \param message The packet to send
+ * \param destination_ip The target IP address as a string
+ * \param port The target UDP port
+ * \return true on success, false on failure
+ */
+  template<typename PacketType>
+  bool sendUdpMessage(const PacketType& message,
+                      const std::string& destination_ip,
+                      unsigned short port) {
+    using namespace boost::asio;
+
+    io_service io_service;
+    ip::udp::socket socket(io_service);
+    auto remote = ip::udp::endpoint(ip::address::from_string(destination_ip), port);
+
+    try {
+      socket.open(ip::udp::v4());
+
+      // ✅ Enable broadcast if destination is a broadcast address
+      if (destination_ip == "255.255.255.255" ||
+          destination_ip.find("255") != std::string::npos) {
+        boost::asio::socket_base::broadcast option(true);
+        socket.set_option(option);
+      }
+
+      auto buffer_data = message.serialize();
+      socket.send_to(buffer(buffer_data.data(), buffer_data.size()), remote);
+    } catch (const boost::system::system_error& ex) {
+      std::cerr << "UDP send error: " << ex.what() << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
 
 };
 

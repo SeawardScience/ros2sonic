@@ -50,25 +50,25 @@ void R2SonicNode::Parameters::init(rclcpp::Node *node){
 }
 
 
-bool send_udp_message(packets::CmdSet message, const std::string& destination_ip,
-            const unsigned short port) {
+// bool send_udp_message(packets::CmdSet message, const std::string& destination_ip,
+//             const unsigned short port) {
 
-  using namespace boost::asio;
-  io_service io_service;
-  ip::udp::socket socket(io_service);
-  auto remote = ip::udp::endpoint(ip::address::from_string(destination_ip), port);
-  try {
-    socket.open(boost::asio::ip::udp::v4());
-    auto buff = message.serialize();
-    socket.send_to(buffer(buff,
-                          buff.size()),
-                          remote);
+//   using namespace boost::asio;
+//   io_service io_service;
+//   ip::udp::socket socket(io_service);
+//   auto remote = ip::udp::endpoint(ip::address::from_string(destination_ip), port);
+//   try {
+//     socket.open(boost::asio::ip::udp::v4());
+//     auto buff = message.serialize();
+//     socket.send_to(buffer(buff,
+//                           buff.size()),
+//                           remote);
 
-  } catch (const boost::system::system_error& ex) {
-    return false;
-  }
-  return true;
-}
+//   } catch (const boost::system::system_error& ex) {
+//     return false;
+//   }
+//   return true;
+// }
 
 R2SonicNode::R2SonicNode():
   Node("r2sonic")
@@ -226,8 +226,20 @@ rcl_interfaces::msg::SetParametersResult R2SonicNode::onParameterUpdate(const st
 
 void R2SonicNode::send_cmds()
 {
+  sendNetworkConfig();
   send_sim_cmds();
   send_head_cmds();
+}
+
+void R2SonicNode::sendNetworkConfig()
+{
+  packets::R2DC head("300541");
+  head.setConfigId(this->get_name());
+  sendUdpMessage(head, "10.255.255.255", 53810);
+
+  packets::R2DC sim("200674");
+  sim.setConfigId(this->get_name());
+  sendUdpMessage(sim,  "10.255.255.255", 53810);
 }
 
 void R2SonicNode::send_sim_cmds() {
@@ -241,7 +253,7 @@ void R2SonicNode::send_sim_cmds() {
   }
 
   // Send the serialized packet (e.g., via UDP)
-  send_udp_message(cmd_pkt, parameters_.sim_ip, 65502);
+  sendUdpMessage(cmd_pkt, parameters_.sim_ip, 65502);
 
   // Optional: Log the operation
   RCLCPP_INFO(this->get_logger(), "Sent SimCmds to sonar at %s", parameters_.sim_ip.c_str());
@@ -268,7 +280,7 @@ void R2SonicNode::send_head_cmds() {
   auto buff = cmd_pkt.serialize();
 
   // Send the serialized packet (e.g., via UDP)
-  send_udp_message(cmd_pkt, parameters_.sonar_ip, 65502);
+  sendUdpMessage(cmd_pkt, parameters_.sonar_ip, 65502);
 
   // Optional: Log the operation
   RCLCPP_INFO(this->get_logger(), "Sent HeadCmds to sonar at %s", parameters_.sonar_ip.c_str());
@@ -301,4 +313,7 @@ bool R2SonicNode::shouldPublish(rclcpp::PublisherBase::SharedPtr pub){
   return pub->get_subscription_count() > 0;
 }
 
+
 NS_FOOT
+
+
