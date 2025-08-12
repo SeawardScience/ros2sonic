@@ -11,6 +11,10 @@ SECTIONS_NS_HEAD
 class A1 : public Section{
 public:
 
+  struct Body{
+    BE_f32 MoreInfo[6]; //!< reserved for future use
+  }__attribute__((packed));
+
   using Section::Section;  // default to parent constructor
   char * nominalType() const{
     return "A1";
@@ -23,7 +27,7 @@ public:
    */
   BE_f32 * BeamAngle(u16 beam_no) const{
     existanceErrorCheck();
-    return & reinterpret_cast<BE_f32*>(start_bit_+sizeof(SectionInfo)+8*sizeof(f32))[beam_no];
+    return & reinterpret_cast<BE_f32*>(start_bit_+sizeof(SectionInfo)+sizeof(Body))[beam_no];
   }
 }__attribute__((packed));
 
