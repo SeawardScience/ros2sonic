@@ -156,7 +156,7 @@ namespace conversions{
       }
 
       if(first_bin+bins >= total_bins){
-        auto sampling_rate_scale = double(total_bins) / ( double(total_samples) );
+        auto sampling_rate_scale = double(total_bins) / ( 2*double(total_samples) );
         sonar_image.sample_rate = h0_data_.RxSampleRate.get() * sampling_rate_scale;
         return true;
       }
