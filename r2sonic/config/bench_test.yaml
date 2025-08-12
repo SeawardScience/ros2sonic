@@ -1,19 +1,87 @@
 /**:
   ros__parameters:
-      topics:                                 # Any topic specified with an empty string , "", will not be computed or published.
-          detections:     "~/detections"      # The topic to publish your acoustic_msgs::msg::Detections
-          bth0:           "~/raw/bth0"        # The topic to publish raw bathy data
-
-      ports:
-          bathy:          4000 #65500         # The port you are receiving bathy data on
-
-      sonar_ip:           "10.0.0.86"         # The IP address of the sonar.  This is where you will send sonar commands.
-                                              # does not need to be specified if you are listen only
-
-      interface_ip:       "0.0.0.0"           # The IP of the interface you want to listen on.  Default ["0.0.0.0"]
-                                              # If you want to listen on all interfaces specify "0.0.0.0"
-
-      tx_frame_id:        "r2sonic_tx"        # The frame id of the acoustic transmitter
-
-      rx_frame_id:        "r2sonic_rx"        # The frame id of the acoustic receiver
+    driver:
+      control_mode: true
+    network:
+      gateway_ip: 0.0.0.0
+      gui_baseport: 65400
+      gui_ip: 10.0.1.102
+      head_baseports_0: 65500
+      head_ips_0: 10.0.0.86
+      simbox_baseports_0: 65500
+      simbox_ips_0: 10.0.0.99
+      subnet_mask: 255.0.0.0
+    sonar:
+      head_serial:  '300541'
+      sim_serial:   '200674'
+      rx_frame_id: acoustic_center
+      system_index: 0
+    sim_commands:
+      gps_baud: 9600
+      gps_data_bits: 8
+      gps_enable: 1
+      gps_interface: 0
+      gps_parity: 0
+      gps_stop_bits: 1
+      heading_enable: 0
+      heading_interface: 2
+      ins_enable: 1
+      motion_baud: 115200
+      motion_data_bits: 8
+      motion_enable: 1
+      motion_interface: 0
+      motion_parity: 0
+      motion_stop_bits: 1
+      pps_edge: 1
+      sonar_power: 1
+      status_data: 3
+      svp_baud: 19200
+      svp_data_bits: 8
+      svp_enable: 1
+      svp_interface: 0
+      svp_parity: 0
+      svp_stop_bits: 1
+      trigger_in_mode: 0
+      trigger_out_mode: 0
+    head_commands:
+      absorption: 80.0
+      acoustic_brightness: 30.0
+      aih_setting: 280
+      auto_mode_flags: 0
+      bathy_intensity_enable: 1
+      bottom_sampling: 0
+      depth_gate:
+        max: 10.399999618530273
+        min: 6.800000190734863
+        slope: 0.0
+      depth_gate_mode: 1
+      frequency: 400000.0
+      head_sync_mode: 0
+      ping_rate_limit:
+        enable: 0
+        value: 60.0
+      ping_trigger_source: 0
+      pitch_stabilization_enable: 1
+      projector_focus: 0.0
+      projector_mode: 1
+      projector_orientation: 1
+      projector_z: 0.11900000274181366
+      range: 25.0
+      receiver_gain: 14.0
+      receiver_tilt: 0.0
+      roll_stabilization_enable: 1
+      sector_rotate: 0.0
+      sector_width: 2.0943949222564697
+      slope_filter_enable: 0
+      snippets_enable: 0
+      sound_velocity: 1496.0
+      sound_velocity_enable: 1
+      spreading_loss: 20
+      transmitter_power: 191.0
+      transmitter_pulse_length: 0.0003800000122282654
+      true_pix_gates: 0
+      true_pix_mode: 1
+      txwaveform_index: 0
+      vertical_steering_angle: 0.0
+      water_column_enable: 0
 
