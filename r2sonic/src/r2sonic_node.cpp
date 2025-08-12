@@ -65,8 +65,13 @@ void R2SonicNode::Parameters::init(rclcpp::Node *node) {
     setupParam(&network.daq_baseports[i], node, "network.daq_baseports_" + std::to_string(i), network.daq_baseports[i]);
   }
 
-  // Sim Commands
+  // Sim Commands - Int
   for (auto &[key, value_pair] : sim_commands.int_params) {
+    setupParam(&value_pair.second, node, "sim_commands." + key, value_pair.second);
+  }
+
+  // Sim Commands - IP Strings
+  for (auto &[key, value_pair] : sim_commands.ip_str_params) {
     setupParam(&value_pair.second, node, "sim_commands." + key, value_pair.second);
   }
 
@@ -79,6 +84,7 @@ void R2SonicNode::Parameters::init(rclcpp::Node *node) {
   for (auto &[key, value_pair] : head_commands.int_params) {
     setupParam(&value_pair.second, node, "head_commands." + key, value_pair.second);
   }
+
 
   // Summary Log
   std::ostringstream oss;
@@ -254,28 +260,48 @@ rcl_interfaces::msg::SetParametersResult R2SonicNode::onParameterUpdate(const st
     try {
       const std::string &param_name = param.get_name();
 
-      // Check if the parameter belongs to SimCmds
       if (param_name.find("sim_commands.") == 0) {
         std::string key = param_name.substr(std::string("sim_commands.").length());
-        auto it = parameters_.sim_commands.int_params.find(key);
-        if (it != parameters_.sim_commands.int_params.end()) {
-          it->second.second = param.as_int();
-        } else {
-          result.successful = false;
-          result.reason = "Unknown parameter in sim_commands: " + key;
+
+        // Integer parameter
+        auto int_it = parameters_.sim_commands.int_params.find(key);
+        if (int_it != parameters_.sim_commands.int_params.end()) {
+          int_it->second.second = param.as_int();
+          continue;
         }
+
+        // IP string parameter
+        auto ip_it = parameters_.sim_commands.ip_str_params.find(key);
+        if (ip_it != parameters_.sim_commands.ip_str_params.end()) {
+          const std::string &ip_candidate = param.as_string();
+
+          try {
+            (void)packets::ip_str_to_u32(ip_candidate.c_str());  // Validate IP
+            ip_it->second.second = ip_candidate;
+          } catch (const std::exception &e) {
+            result.successful = false;
+            result.reason = "Invalid IP for sim_commands." + key + ": " + e.what();
+
+            // ROS2 warning log
+            RCLCPP_WARN(this->get_logger(),
+                        "Rejected IP update for sim_commands.%s: \"%s\" is not a valid IP address. %s",
+                        key.c_str(), ip_candidate.c_str(), e.what());
+          }
+
+          continue;
+        }
+
+        result.successful = false;
+        result.reason = "Unknown parameter in sim_commands: " + key;
       }
-      // Check if the parameter belongs to HeadCmds (Float)
+
       else if (param_name.find("head_commands.") == 0) {
         std::string key = param_name.substr(std::string("head_commands.").length());
 
-        // Check in float_params
         auto float_it = parameters_.head_commands.float_params.find(key);
         if (float_it != parameters_.head_commands.float_params.end()) {
           float_it->second.second = param.as_double();
-        }
-        // Check in int_params
-        else {
+        } else {
           auto int_it = parameters_.head_commands.int_params.find(key);
           if (int_it != parameters_.head_commands.int_params.end()) {
             int_it->second.second = param.as_int();
@@ -285,11 +311,12 @@ rcl_interfaces::msg::SetParametersResult R2SonicNode::onParameterUpdate(const st
           }
         }
       }
-      // Unknown parameter
+
       else {
         result.successful = false;
         result.reason = "Unknown parameter: " + param_name;
       }
+
     } catch (const std::exception &e) {
       result.successful = false;
       result.reason = std::string("Failed to update parameter: ") + e.what();
@@ -298,6 +325,8 @@ rcl_interfaces::msg::SetParametersResult R2SonicNode::onParameterUpdate(const st
 
   return result;
 }
+
+
 
 void R2SonicNode::send_cmds()
 {
@@ -354,19 +383,28 @@ void R2SonicNode::sendNetworkConfig()
 void R2SonicNode::send_sim_cmds() {
   packets::CmdSet cmd_pkt;
 
-  // Add all SimCmds to the packet
+  // Add all SimCmds - int values
   for (const auto &[key, value_pair] : parameters_.sim_commands.int_params) {
-    const auto &cmd_name = value_pair.first; // Command name (e.g., "GPSB")
-    const auto &value = value_pair.second;   // Command value
+    const auto &cmd_name = value_pair.first;
+    const auto &value = value_pair.second;
     cmd_pkt.append(packets::IntCmd(cmd_name.c_str(), value));
   }
 
-  // Send the serialized packet (e.g., via UDP)
-  sendUdpMessage(cmd_pkt, parameters_.getSimIp(),  parameters_.getSimBaseport()+2);
+  // Add all SimCmds - IP string values
+  for (const auto &[key, value_pair] : parameters_.sim_commands.ip_str_params) {
+    const auto &cmd_name = value_pair.first;
+    const auto &ip_str = value_pair.second;
+    uint32_t ip_u32 = packets::ip_str_to_u32(ip_str.c_str());
+    cmd_pkt.append(packets::IntCmd(cmd_name.c_str(), ip_u32));
+  }
 
-  // Optional: Log the operation
-  RCLCPP_DEBUG(this->get_logger(), "Sent SimCmds to sonar at %s", parameters_.getSimIp().c_str());
+  // Send the serialized packet (e.g., via UDP)
+  sendUdpMessage(cmd_pkt, parameters_.getSimIp(), parameters_.getSimBaseport() + 2);
+
+  RCLCPP_DEBUG(this->get_logger(), "Sent SimCmds (with IPs) to %s:%d",
+               parameters_.getSimIp().c_str(), parameters_.getSimBaseport() + 2);
 }
+
 
 void R2SonicNode::send_head_cmds() {
   packets::CmdSet cmd_pkt;

@@ -96,10 +96,18 @@ public:
 
     struct SimCmds {
       std::map<std::string, std::pair<std::string, int>> int_params;
+      std::map<std::string, std::pair<std::string, std::string>> ip_str_params;
 
       SimCmds() {
+        ip_str_params = {
+            {"motion_ip_addr", {"IPM0","10.0.0.90"}},
+            {"gps_ip_addr",    {"IPG0","10.0.0.44"}},
+            {"svp_ip_addr",    {"IPS0","0.0.0.0"}}
+        };
         int_params = {
             {"status_data", {"STM0", 3}},
+
+            {"pps_edge", {"POG0", 1}},
 
             {"gps_enable", {"ENG0", 1}},
             {"gps_interface", {"DRG0", 0}},
@@ -107,7 +115,7 @@ public:
             {"gps_data_bits", {"DBG0", 8}},
             {"gps_parity", {"PAG0", 0}},
             {"gps_stop_bits", {"SBG0", 1}},
-            {"pps_edge", {"POG0", 1}},
+            {"gps_ip_port", {"PTG0", 5506}},
 
             {"trigger_in_mode", {"SYI0", 0}},
             {"trigger_out_mode", {"SYO0", 0}},
@@ -121,6 +129,7 @@ public:
             {"motion_data_bits", {"DBM0", 8}},
             {"motion_parity", {"PAM0", 0}},
             {"motion_stop_bits", {"SBM0", 1}},
+            {"motion_ip_port", {"PTM0", 5607}},
 
             {"svp_enable", {"ENS0", 1}},
             {"svp_interface", {"DRS0", 0}},
@@ -128,6 +137,7 @@ public:
             {"svp_data_bits", {"DBS0", 8}},
             {"svp_parity", {"PAS0", 0}},
             {"svp_stop_bits", {"SBS0", 1}},
+            {"svp_ip_port", {"PTS0", 1}},
 
             {"sonar_power", {"SPO0", 1}},
             {"ins_enable", {"IINS", 1}}
