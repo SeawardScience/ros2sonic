@@ -34,6 +34,12 @@ namespace conversions{
     detections_msg->tx_angles.resize(num_beams);
     detections_msg->rx_angles.resize(num_beams);
 
+    // NEW: flags
+    detections_msg->flags.resize(num_beams);
+
+    // Q0 quality flags (if it exists)
+    const bool has_q0 = bth0_pkt.q0().exists();
+
     // A2 data (if it exists)
     bool has_a2 = bth0_pkt.a2().exists();
     float a2_angle_first = 0.0f;
@@ -74,18 +80,28 @@ namespace conversions{
 
       // Rx angle: Prefer A2 if available
       if (has_a2) {
-
         a2_step_sum += bth0_pkt.a2().AngleStep(i)->get();
-
         detections_msg->rx_angles[i] = a2_angle_first + (a2_step_sum * a2_scale_factor);
-      }
-      else if (has_a0) {
+      } else if (has_a0) {
         detections_msg->rx_angles[i] = a0_angle_first + (a0_delta * i);
       } else {
         detections_msg->rx_angles[i] = 0.0f;  // fallback default
       }
+
+      // NEW: Beam quality flagging:
+      // OK if phaseDetect OR magnitudeDetect, else "bad by sonar".
+      // If Q0 isn't present, default to OK.
+      if (has_q0) {
+        const bool ok = bth0_pkt.q0().phaseDetect(i) || bth0_pkt.q0().magnitudeDetect(i);
+        detections_msg->flags[i].flag =
+            ok ? marine_acoustic_msgs::msg::DetectionFlag::DETECT_OK
+               : marine_acoustic_msgs::msg::DetectionFlag::DETECT_BAD_SONAR;
+      } else {
+        detections_msg->flags[i].flag = marine_acoustic_msgs::msg::DetectionFlag::DETECT_OK;
+      }
     }
   }
+
 
 
   void packet2RawPacket(r2sonic_interfaces::msg::RawPacket *raw_packet_msg, const packets::Packet * pkt){
