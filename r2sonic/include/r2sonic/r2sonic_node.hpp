@@ -160,10 +160,13 @@ public:
                         {"frequency", {"FRQ0", 200000.0f}},
                         {"transmitter_power", {"TXP0", 191.0f}},
                         {"transmitter_pulse_length", {"TXL0", 0.00038f}},
+                        {"spreading_loss", {"SPR0", 20.0f}},
                         {"sector_width", {"SEW0", 2.094395f}},
                         {"depth_gate.min", {"DGA0", 6.8f}},
                         {"depth_gate.max", {"DGB0", 10.4f}},
                         {"depth_gate.slope", {"DGS0", 0.0f}},
+                        {"range_gate.min",  {"RGA0", 3.0455322f}},  // from OEM: 0x4042EA00
+                        {"range_gate.max",  {"RGB0", 999.0f}},      // from OEM: 0x4479C000
                         {"receiver_tilt", {"RET0", 0.0f}},
                         {"projector_focus", {"TXF0", 0.0f}},
                         {"vertical_steering_angle", {"TXS0", 0.0f}},
@@ -173,9 +176,11 @@ public:
                         };
 
         int_params = {
+                      {"status_data", {"STM0", 3}},
                       {"sound_velocity_enable", {"SVU0", 1}},
                       {"depth_gate_mode", {"DGO0", 1}},
                       {"auto_mode_flags", {"AUT0", 0}},
+                      {"range_gate.mode", {"RGO0", 0}},
                       {"bathy_intensity_enable", {"BIE0", 1}},
                       {"roll_stabilization_enable", {"ROS0", 1}},
                       {"pitch_stabilization_enable", {"PTS0", 1}},
@@ -185,11 +190,12 @@ public:
                       {"ping_trigger_source", {"TRG0", 0}},
                       {"slope_filter_enable", {"FIL0", 0}},
                       {"bottom_sampling", {"BOS0", 0}},
-                      {"spreading_loss", {"SPR0", 20}},          // derived from 0x41a00000
+                      {"uhd_enable", {"UHD0", 0}},
                       {"aih_setting", {"AIH0", 280}},         // from 0x00000118
-                      {"true_pix_mode", {"TPM0", 1}},
+                      {"true_pix_mode", {"TPM0", 0}},
                       {"true_pix_gates", {"TPG0", 0}},
                       {"snippets_enable", {"SNIP", 0}},
+                      {"tx_apodization", {"TXW0", 0}},
                       {"txwaveform_index", {"TWIX", 0}},
                       {"projector_mode", {"PROJ", 1}},
                       {"ping_rate_limit.enable", {"PRU0", 0}}
