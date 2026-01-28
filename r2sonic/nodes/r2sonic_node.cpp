@@ -27,6 +27,10 @@ int main(int argc, char *argv[])
   rclcpp::spin(node);
   rclcpp::shutdown();
 
+  bth0_rec.stop();
+  aid0_rec.stop();
+  cmd_rec.stop();
+
   for(auto &th : threads){
     th.join();
   }

@@ -22,6 +22,7 @@ public:
   void receive(const std::string &host,
                const int &port);
   char * startBit();
+  void stop(){io_service_.stop();}
 
 protected:
   boost::asio::io_context io_service_;
