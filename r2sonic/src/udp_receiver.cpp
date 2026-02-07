@@ -1,4 +1,7 @@
 #include "udp_receiver.hpp"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
+#include <thread>
 
 NS_HEAD
 
@@ -17,17 +20,54 @@ void UdpReceiver::wait(){
 void UdpReceiver::receive(const std::string& host,
                           const std::string& port){
 
-  boost::asio::ip::udp::resolver resolver(io_service_);
-  boost::asio::ip::udp::resolver::query query(
-        boost::asio::ip::udp::v4(), host, port);
-  boost::asio::ip::udp::resolver::iterator iter = resolver.resolve(query);
-  remote_endpoint_ = *iter;
+  boost::asio::ip::udp::endpoint local_endpoint(
+      boost::asio::ip::udp::v4(),
+      std::atoi(port.c_str())
+      );
 
   socket_.open(boost::asio::ip::udp::v4());
-  socket_.bind(remote_endpoint_);
+
+  // Retry logic for bind
+  int retry_count = 0;
+  int retry_delay_ms = 1000;
+
+  while (rclcpp::ok()) {
+    try {
+      socket_.bind(local_endpoint);
+      if (retry_count > 0) {
+        RCLCPP_INFO(rclcpp::get_logger("r2sonic_node"),
+                    "Successfully bound to %s:%s after %d attempts",
+                    host.c_str(), port.c_str(), retry_count);
+      } else {
+        RCLCPP_INFO(rclcpp::get_logger("r2sonic_node"),
+                    "Successfully bound to %s:%s",
+                    host.c_str(), port.c_str());
+      }
+      break;
+    }
+    catch (const boost::system::system_error& e) {
+      retry_count++;
+
+      // Log warning every 10 attempts to avoid log spam
+      if (retry_count % 10 == 1) {
+        RCLCPP_WARN(rclcpp::get_logger("r2sonic_node"),
+                    "Still trying to bind to %s:%s (attempt %d): %s",
+                    host.c_str(), port.c_str(), retry_count, e.what());
+      }
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
+    }
+  }
+
+  // Check if we exited due to shutdown
+  if (!rclcpp::ok()) {
+    RCLCPP_INFO(rclcpp::get_logger("r2sonic_node"),
+                "Shutdown requested before successful bind to %s:%s",
+                host.c_str(), port.c_str());
+    return;  // or throw, depending on your error handling strategy
+  }
 
   wait();
-
   io_service_.run();
 
 }
