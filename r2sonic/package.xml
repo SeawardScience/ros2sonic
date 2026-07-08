@@ -11,6 +11,8 @@
 
   <depend> marine_acoustic_msgs </depend>
   <depend> r2sonic_interfaces </depend>
+  <depend> rtcm_msgs </depend>
+  <depend> io_interfaces </depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

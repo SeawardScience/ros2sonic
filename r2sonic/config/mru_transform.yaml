@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    base_frame: acoustic_center
+    map_frame: map
+    odom_frame: odom
+    odom_topic: odom
+    sensor_timeout: 2.0
+    sensors:
+      sbg_mru:
+        topics:
+          orientation: sensors/mru/imu/data
+          position: sensors/mru/imu/ekf/fix
+          velocity: sensors/mru/imu/velocity
+    sensors_names:
+    - sbg_mru
+    use_sim_time: false

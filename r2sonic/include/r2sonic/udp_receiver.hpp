@@ -15,13 +15,14 @@ class UdpReceiver
 public:
   UdpReceiver();
   void receiveHandler(const boost::system::error_code& error, size_t bytes_transferred);
-  virtual void receiveImpl(const boost::system::error_code& error, size_t bytes_transferred)=0;
+  virtual void receiveImpl(const boost::system::error_code& error, size_t bytes_transferred){return;}
   void wait();
   void receive(const std::string& host,
                const std::string& port);
   void receive(const std::string &host,
                const int &port);
   char * startBit();
+  void stop(){io_service_.stop();}
 
 protected:
   boost::asio::io_context io_service_;

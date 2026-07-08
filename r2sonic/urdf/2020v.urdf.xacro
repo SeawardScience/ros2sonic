@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="r2sonic">
+
+  <xacro:arg name="namespace" default="r2sonic" />
+
+  <xacro:property name="namespace" value="$(arg namespace)" scope="global" />
+
+  <xacro:property name="deg" value="${pi/180}" />
+
+  <link name="${namespace}/base_link"></link>
+  <link name="${namespace}/acoustic_center"></link>
+
+
+  <joint name="base2acoustic" type="fixed">
+    <parent link="${namespace}/base_link"/>
+    <child link="${namespace}/acoustic_center"/>
+    <origin xyz="0 0 0" rpy="${0*deg} ${0*deg} ${0*deg}" />
+  </joint>
+
+</robot>
